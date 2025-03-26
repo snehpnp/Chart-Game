@@ -1,96 +1,116 @@
-import React, { useEffect, useRef ,useState} from 'react';
+import React, { useEffect, useRef, useState } from "react";
 
 import { Line } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
 // Chart.js modules register karna
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
-
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const CryptoFutures = () => {
   const [data, setData] = useState([]);
- 
-   useEffect(() => {
-     const socket = new WebSocket("ws://localhost:6767");
- 
-     socket.onopen = () => {
-       console.log("📡 Connected to WebSocket");
-     };
- 
-     socket.onmessage = (event) => {
-       try {
-         const newData = JSON.parse(event.data);
-         const formattedData = newData.map((entry) => ({
-           time: new Date(entry[2]).toLocaleTimeString(), // Time format
-           price: entry[5], // Price
-         }));
- 
-         console.log("📊 Received Data:", formattedData);
- 
-         setData((prevData) => {
-           const updatedData = [...prevData, ...formattedData].slice(-30); // Pichle 30 records tak limit
-           return updatedData;
-         });
-       } catch (error) {
-         console.error("❌ Error parsing data:", error);
-       }
-     };
- 
-     socket.onclose = () => console.warn("🔌 WebSocket Disconnected");
-     socket.onerror = (err) => console.error("❌ WebSocket Error:", err);
- 
-     return () => {
-       socket.close();
-     };
-   }, []);
- 
-   // Chart.js ke liye formatted dataset
-   const chartData = {
-     labels: data.map((d) => d.time),
-     datasets: [
-       {
-         label: "Crypto Price",
-         data: data.map((d) => d.price),
-         borderColor: "#4CAF50",
-         backgroundColor: "rgba(76, 175, 80, 0.2)",
-         pointBackgroundColor: "#4CAF50",
-         pointBorderColor: "#fff",
-         tension: 0.4, // Smooth curve effect
-       },
-     ],
-   };
- 
-   const options = {
-     responsive: true,
-     maintainAspectRatio: false, // Chart ko responsive banane ke liye
-     plugins: {
-       legend: {
-         display: true,
-         position: "top",
-       },
-       tooltip: {
-         enabled: true,
-       },
-     },
-     scales: {
-       x: {
-         title: { display: true, text: "Time" },
-         ticks: {
-           autoSkip: false, // Har label ko show karne ke liye
-           maxRotation: 45, // Thoda tilt karne ke liye
-           minRotation: 30,
-         },
-       },
-       y: {
-         title: { display: true, text: "Price" },
-         beginAtZero: false,
-       },
-     },
-   };
+  const [LiveCryptoPrice, setLiveCryptoPrice] = useState();
+
+  useEffect(() => {
+    const socket = new WebSocket("ws://localhost:6767");
+
+    socket.onopen = () => {
+      console.log("📡 Connected to WebSocket");
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const newData = JSON.parse(event.data);
+
+     
+        const formattedData = newData.map((entry) => ({
+          time: new Date(entry[2]).toLocaleTimeString(), // Time format
+          price: entry[5], // Price
+        }));
+
+        setLiveCryptoPrice(formattedData[formattedData.length-1]?.price);
+        setData((prevData) => {
+          const updatedData = [...prevData, ...formattedData].slice(-30); // Pichle 30 records tak limit
+          return updatedData;
+        });
+      } catch (error) {
+        console.error("❌ Error parsing data:", error);
+      }
+    };
+
+    socket.onclose = () => console.warn("🔌 WebSocket Disconnected");
+    socket.onerror = (err) => console.error("❌ WebSocket Error:", err);
+
+    return () => {
+      socket.close();
+    };
+  }, []);
+
+  // Chart.js ke liye formatted dataset
+  const chartData = {
+    labels: data.map((d) => d.time),
+    datasets: [
+      {
+        label: "Crypto Price",
+        data: data.map((d) => d.price),
+        borderColor: "#4CAF50",
+        backgroundColor: "rgba(76, 175, 80, 0.2)",
+        pointBackgroundColor: "#4CAF50",
+        pointBorderColor: "#fff",
+        tension: 0.4, // Smooth curve effect
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false, // Chart ko responsive banane ke liye
+    plugins: {
+      legend: {
+        display: true,
+        position: "top",
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+    scales: {
+      x: {
+        title: { display: true, text: "Time" },
+        ticks: {
+          autoSkip: false, // Har label ko show karne ke liye
+          maxRotation: 45, // Thoda tilt karne ke liye
+          minRotation: 30,
+        },
+      },
+      y: {
+        title: { display: true, text: "Price" },
+        beginAtZero: false,
+      },
+    },
+  };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#1a1d26', color: '#fff' }}>
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: "#1a1d26", color: "#fff" }}
+    >
       <div className="container mx-auto p-4">
         <header className="flex justify-between items-center mb-4">
           <div className="flex items-center">
@@ -127,7 +147,8 @@ const CryptoFutures = () => {
                   <i className="bi bi-currency-bitcoin text-orange-500 mr-2"></i>
                   <span>BTC/USD</span>
                 </div>
-                <span>$58099.438</span>
+                <span>{`$ ${LiveCryptoPrice}`}</span>
+
               </div>
               <div className="crypto-item flex justify-between p-2 rounded">
                 <div className="flex items-center">
@@ -142,12 +163,20 @@ const CryptoFutures = () => {
 
           {/* Center Panel */}
           <div className="md:col-span-6 bg-gray-900 rounded-lg p-4">
-           <div style={{ width: "100%", overflowX: "auto", paddingBottom: "20px" }}>
-                <h2 style={{ textAlign: "center" ,color:"white"}}>Live Crypto Price Chart</h2>
-                <div style={{ width: "1200px", height: "400px" }}>
-                  <Line data={chartData} options={options} />
-                </div>
+            <div
+              style={{
+                width: "100%",
+                overflowX: "auto",
+                paddingBottom: "20px",
+              }}
+            >
+              <h2 style={{ textAlign: "center", color: "white" }}>
+                Live Crypto Price Chart
+              </h2>
+              <div style={{ width: "1200px", height: "400px" }}>
+                <Line data={chartData} options={options} />
               </div>
+            </div>
           </div>
 
           {/* Right Panel */}
@@ -161,7 +190,9 @@ const CryptoFutures = () => {
             </div>
 
             <div className="flex gap-2 mb-4">
-              <button className="flex-1 bg-gray-800 py-2 rounded">MANUAL</button>
+              <button className="flex-1 bg-gray-800 py-2 rounded">
+                MANUAL
+              </button>
               <button className="flex-1 bg-gray-800 py-2 rounded">AUTO</button>
             </div>
 
