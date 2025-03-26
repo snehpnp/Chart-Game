@@ -1,0 +1,50 @@
+
+:root {
+    --neon-blue: #00f3ff;
+    --neon-green: #00ff9d;
+    --neon-red: #ff355e;
+}
+body {
+    background: #1a1a2e;
+    font-family: 'Arial', sans-serif;
+}
+.chart-container {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+}
+.neon-button {
+    transition: all 0.3s ease;
+    text-shadow: 0 0 5px currentColor;
+    position: relative;
+    overflow: hidden;
+}
+.neon-button::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: currentColor;
+    opacity: 0;
+    transform: rotate(30deg);
+    transition: opacity 0.3s;
+}
+.neon-button:active::after {
+    opacity: 0.1;
+}
+.result-panel {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+}
+@media (max-width: 768px) {
+    .game-container {
+        flex-direction: column;
+    }
+    .button-container {
+        flex-direction: row;
+        width: 100%;
+    }
+}
