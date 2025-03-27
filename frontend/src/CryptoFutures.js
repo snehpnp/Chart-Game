@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import Swal from "sweetalert2";
 
 // Chart.js modules register karna
 ChartJS.register(
@@ -27,12 +28,14 @@ const CryptoFutures = () => {
   const [data, setData] = useState([]);
   const [LiveCryptoPrice, setLiveCryptoPrice] = useState();
 
+  const [betActive, setBetActive] = useState(true);
+
   const [seconds, setSeconds] = useState(new Date().getSeconds());
-  const [betActive, setBetActive] = useState(false);
   const [userBet, setUserBet] = useState(null); // 'UP' or 'DOWN'
+  const [betPrice, setBetPrice] = useState(null);
 
-
-  const [betPrice, setBetPrice] = useState();
+  const [betResponse, setBetResponse] = useState([]);
+  const [betAmount, setBetAmount] = useState(10);
 
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:6767");
@@ -119,39 +122,64 @@ const CryptoFutures = () => {
       setSeconds(sec);
 
       if (sec === 0) {
-        setBetActive(true);
-        setUserBet(null);
+        setBetActive((prev) => !prev);
+      } else if (sec === 10) {
+        setBetActive((prev) => !prev);
+      } else if (sec === 20) {
+        setBetActive((prev) => !prev);
+
+        checkBetResult();
       } else if (sec === 30) {
-  
-        setBetActive(false);
+        setBetActive((prev) => !prev);
+      } else if (sec === 40) {
+        setBetActive((prev) => !prev);
+
+        checkBetResult();
+      } else if (sec === 50) {
+        setBetActive((prev) => !prev);
       } else if (sec === 59) {
-      
         checkBetResult();
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [seconds]);
 
   const placeBet = (betType) => {
-    console.log("🚀 ~ file: CryptoFutures.js ~ line 139 ~ placeBet ~ betType", betType,betActive);
-   
-   
-    if (!betActive) return;
+    // if (!betActive) return;
+    console.log("Placing bet:", betType);
     setBetPrice(LiveCryptoPrice);
-
     setUserBet(betType);
   };
 
   const checkBetResult = () => {
-    if (!userBet) return;
+    console.log(
+      "Checking result -> Bet:",
+      userBet,
+      "Price:",
+      betPrice,
+      "Live:",
+      LiveCryptoPrice
+    );
+    if (!userBet || betPrice === null) return;
+
     if (userBet === "UP" && LiveCryptoPrice > betPrice) {
-      alert("🎉 You Win! Market went up.");
+      // alert("🎉 You Win! Market went up.");
+      Swal.fire({ title: "You Win! Market went up.", icon: "success" });
+      setBetResponse((prev) => [...prev, {Amount:betAmount *2 , type:"WIN",title:"You Win! Market went up.",time:new Date().toLocaleTimeString()}]);
     } else if (userBet === "DOWN" && LiveCryptoPrice < betPrice) {
-      alert("🎉 You Win! Market went down.");
+      // alert("🎉 You Win! Market went down.");
+      Swal.fire({ title: "You Win! Market went down.", icon: "success" });
+      setBetResponse((prev) => [...prev, {Amount:betAmount *2 , type:"WIN",title:"You Win! Market went down.",time:new Date().toLocaleTimeString()}]);
     } else {
-      alert("❌ You Lost! Market moved opposite.");
+      // alert("❌ You Lost! Market moved opposite.");
+      Swal.fire({ title: "You Lost! Market moved opposite.", icon: "error" });
+      setBetResponse((prev) => [...prev, {Amount:betAmount  ,type:"LOST",title:"You Lost! Market moved opposite.",time:new Date().toLocaleTimeString()}]);
     }
+
+    // Reset Bet
+    setUserBet(null);
+    setBetPrice(null);
   };
 
   return (
@@ -228,30 +256,31 @@ const CryptoFutures = () => {
 
           {/* Right Panel */}
           <div className="md:col-span-3 bg-gray-900 rounded-lg p-4">
-
-              <div className="mb-4 text-center">
-                <h2 className="text-lg font-bold">Timer</h2>
-                <div
-                  className="text-4xl font-mono bg-gray-800 py-2 rounded"
-                  style={{ color: "#4CAF50" }}
-                >
-                  {`00:${seconds < 10 ? `0${seconds}` : seconds}`}
-                </div>
-                <p className="text-sm mt-2">
-                  {betActive
-                    ? "Place your bet now!"
-                    : seconds < 30
-                    ? "Betting will open soon..."
-                    : "Betting is closed."}
-                </p>
+            <div className="mb-4 text-center">
+              <h2 className="text-lg font-bold">Timer</h2>
+              <div
+                className="text-4xl font-mono bg-gray-800 py-2 rounded"
+                style={{ color: "#4CAF50" }}
+              >
+                {`00:${seconds < 10 ? `0${seconds}` : seconds}`}
               </div>
+              <p className="text-sm mt-2">
+                {betActive
+                  ? "Place your bet now!"
+                  : seconds < 30
+                  ? "Betting will open soon..."
+                  : "Betting is closed."}
+              </p>
+            </div>
 
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center">
                 <i className="bi bi-currency-ethereum text-blue-500 mr-2"></i>
                 <span>Bet Price</span>
               </div>
-              <span className="text-green-500">{`$ ${betPrice ? betPrice :LiveCryptoPrice}`}</span>
+              <span className="text-green-500">{`$ ${
+                betPrice ? betPrice : LiveCryptoPrice
+              }`}</span>
             </div>
 
             <div className="flex gap-2 mb-4">
@@ -262,20 +291,24 @@ const CryptoFutures = () => {
             </div>
 
             <div className="flex gap-2 mb-4">
-                <button
-          className={`flex-1 py-2 rounded ${betActive ? "bg-green-500" : "bg-gray-600 cursor-not-allowed"}`}
-          onClick={() => placeBet("UP")}
-          disabled={!betActive}
-        >
-          UP
-        </button>
-        <button
-          className={`flex-1 py-2 rounded ${betActive ? "bg-red-500" : "bg-gray-600 cursor-not-allowed"}`}
-          onClick={() => placeBet("DOWN")}
-          disabled={!betActive}
-        >
-          DOWN
-        </button>
+              <button
+                className={`flex-1 py-2 rounded ${
+                  betActive ? "bg-green-500" : "bg-gray-600 cursor-not-allowed"
+                }`}
+                onClick={() => placeBet("UP")}
+                disabled={!betActive}
+              >
+                UP
+              </button>
+              <button
+                className={`flex-1 py-2 rounded ${
+                  betActive ? "bg-red-500" : "bg-gray-600 cursor-not-allowed"
+                }`}
+                onClick={() => placeBet("DOWN")}
+                disabled={!betActive}
+              >
+                DOWN
+              </button>
             </div>
 
             <div className="mb-4">
@@ -284,6 +317,8 @@ const CryptoFutures = () => {
                 type="number"
                 defaultValue="10"
                 className="w-full bg-gray-800 p-2 rounded"
+                onChange={(e) => setBetAmount(e.target.value || 0)}
+                disabled={!betActive}
               />
               <div className="flex justify-end gap-2 mt-2">
                 <button className="bg-gray-800 px-3 py-1 rounded">Max</button>
@@ -318,6 +353,28 @@ const CryptoFutures = () => {
             {/* <button className="w-full bg-green-500 py-3 rounded font-bold">
               PLACE BET
             </button> */}
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto p-4">
+        <div className="bg-gray-900 rounded-lg p-4">
+          <h2 className="text-lg font-bold mb-4">Bet History</h2>
+          <div className="space-y-2">
+            {betResponse.map((bet, index) => (
+              <div
+                key={index}
+                className={`flex justify-between p-2 rounded ${
+                  bet.type === "WIN" ? "bg-green-500" : "bg-red-500"
+                }`}
+              >
+                <span>{index+1}</span>
+
+                <span>{bet.title}</span>
+                <span>{bet.time}</span>
+                <span>{bet.type == "WIN" ?  bet.Amount : "-"+bet.Amount} </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
