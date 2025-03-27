@@ -27,6 +27,13 @@ const CryptoFutures = () => {
   const [data, setData] = useState([]);
   const [LiveCryptoPrice, setLiveCryptoPrice] = useState();
 
+  const [seconds, setSeconds] = useState(new Date().getSeconds());
+  const [betActive, setBetActive] = useState(false);
+  const [userBet, setUserBet] = useState(null); // 'UP' or 'DOWN'
+
+
+  const [betPrice, setBetPrice] = useState();
+
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:6767");
 
@@ -38,13 +45,12 @@ const CryptoFutures = () => {
       try {
         const newData = JSON.parse(event.data);
 
-     
         const formattedData = newData.map((entry) => ({
           time: new Date(entry[2]).toLocaleTimeString(), // Time format
           price: entry[5], // Price
         }));
 
-        setLiveCryptoPrice(formattedData[formattedData.length-1]?.price);
+        setLiveCryptoPrice(formattedData[formattedData.length - 1]?.price);
         setData((prevData) => {
           const updatedData = [...prevData, ...formattedData].slice(-30); // Pichle 30 records tak limit
           return updatedData;
@@ -106,6 +112,48 @@ const CryptoFutures = () => {
     },
   };
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const sec = now.getSeconds();
+      setSeconds(sec);
+
+      if (sec === 0) {
+        setBetActive(true);
+        setUserBet(null);
+      } else if (sec === 30) {
+  
+        setBetActive(false);
+      } else if (sec === 59) {
+      
+        checkBetResult();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const placeBet = (betType) => {
+    console.log("🚀 ~ file: CryptoFutures.js ~ line 139 ~ placeBet ~ betType", betType,betActive);
+   
+   
+    if (!betActive) return;
+    setBetPrice(LiveCryptoPrice);
+
+    setUserBet(betType);
+  };
+
+  const checkBetResult = () => {
+    if (!userBet) return;
+    if (userBet === "UP" && LiveCryptoPrice > betPrice) {
+      alert("🎉 You Win! Market went up.");
+    } else if (userBet === "DOWN" && LiveCryptoPrice < betPrice) {
+      alert("🎉 You Win! Market went down.");
+    } else {
+      alert("❌ You Lost! Market moved opposite.");
+    }
+  };
+
   return (
     <div
       className="min-h-screen"
@@ -148,7 +196,6 @@ const CryptoFutures = () => {
                   <span>BTC/USD</span>
                 </div>
                 <span>{`$ ${LiveCryptoPrice}`}</span>
-
               </div>
               <div className="crypto-item flex justify-between p-2 rounded">
                 <div className="flex items-center">
@@ -181,12 +228,30 @@ const CryptoFutures = () => {
 
           {/* Right Panel */}
           <div className="md:col-span-3 bg-gray-900 rounded-lg p-4">
+
+              <div className="mb-4 text-center">
+                <h2 className="text-lg font-bold">Timer</h2>
+                <div
+                  className="text-4xl font-mono bg-gray-800 py-2 rounded"
+                  style={{ color: "#4CAF50" }}
+                >
+                  {`00:${seconds < 10 ? `0${seconds}` : seconds}`}
+                </div>
+                <p className="text-sm mt-2">
+                  {betActive
+                    ? "Place your bet now!"
+                    : seconds < 30
+                    ? "Betting will open soon..."
+                    : "Betting is closed."}
+                </p>
+              </div>
+
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center">
                 <i className="bi bi-currency-ethereum text-blue-500 mr-2"></i>
-                <span>ETH/USD</span>
+                <span>Bet Price</span>
               </div>
-              <span className="text-green-500">$2072.125</span>
+              <span className="text-green-500">{`$ ${betPrice ? betPrice :LiveCryptoPrice}`}</span>
             </div>
 
             <div className="flex gap-2 mb-4">
@@ -197,8 +262,20 @@ const CryptoFutures = () => {
             </div>
 
             <div className="flex gap-2 mb-4">
-              <button className="flex-1 bg-green-500 py-2 rounded">UP</button>
-              <button className="flex-1 bg-red-500 py-2 rounded">DOWN</button>
+                <button
+          className={`flex-1 py-2 rounded ${betActive ? "bg-green-500" : "bg-gray-600 cursor-not-allowed"}`}
+          onClick={() => placeBet("UP")}
+          disabled={!betActive}
+        >
+          UP
+        </button>
+        <button
+          className={`flex-1 py-2 rounded ${betActive ? "bg-red-500" : "bg-gray-600 cursor-not-allowed"}`}
+          onClick={() => placeBet("DOWN")}
+          disabled={!betActive}
+        >
+          DOWN
+        </button>
             </div>
 
             <div className="mb-4">
@@ -215,7 +292,7 @@ const CryptoFutures = () => {
               </div>
             </div>
 
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <label className="block mb-2">MULTIPLIER</label>
               <input
                 type="number"
@@ -236,11 +313,11 @@ const CryptoFutures = () => {
                 <span>x1 • Safe</span>
                 <span>Wild • x100</span>
               </div>
-            </div>
+            </div> */}
 
-            <button className="w-full bg-green-500 py-3 rounded font-bold">
+            {/* <button className="w-full bg-green-500 py-3 rounded font-bold">
               PLACE BET
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
