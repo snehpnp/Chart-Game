@@ -38,7 +38,11 @@ function connectWebSocket() {
     const subscribeMessage = {
       eventName: "subscribe",
       authorization: API_KEY,
-      eventData: { tickers: ["btcusd"] },
+      // eventData: { tickers: ["btcusd"] },
+      eventData : {
+        'thresholdLevel': 2,
+        tickers: ["btcusd"]
+    }
     };
     ws.send(JSON.stringify(subscribeMessage));
   };
@@ -46,16 +50,16 @@ function connectWebSocket() {
   ws.onmessage = (event) => {
     try {
       const response = JSON.parse(event.data);
-      // console.log("📊 Received Data:", response);
 
       if (response.messageType === "A" && response.data?.length > 0) {
         const newData = response.data // Only take the latest data
         previousData.push(newData); // Store new data in previousData
+      
 
         // Limit previous data array to last 50 entries
-        // if (previousData.length > 50) {
-        //   previousData.shift(); // Remove oldest data
-        // }
+        if (previousData.length > 50) {
+          previousData.shift(); // Remove oldest data
+        }
         
 
         // Send updated previous + new data to all connected frontend clients

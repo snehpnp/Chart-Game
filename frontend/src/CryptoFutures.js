@@ -327,32 +327,7 @@ const CryptoFutures = () => {
               </div>
             </div>
 
-            {/* <div className="mb-4">
-              <label className="block mb-2">MULTIPLIER</label>
-              <input
-                type="number"
-                defaultValue="50"
-                className="w-full bg-gray-800 p-2 rounded"
-              />
-            </div>
-
-            <div className="mb-4">
-              <input
-                type="range"
-                className="trading-slider w-full"
-                min="1"
-                max="100"
-                defaultValue="50"
-              />
-              <div className="flex justify-between">
-                <span>x1 • Safe</span>
-                <span>Wild • x100</span>
-              </div>
-            </div> */}
-
-            {/* <button className="w-full bg-green-500 py-3 rounded font-bold">
-              PLACE BET
-            </button> */}
+      
           </div>
         </div>
       </div>
