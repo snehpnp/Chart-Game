@@ -7,8 +7,8 @@ import CandelStick from './CandelStick';
 function App() {
   return (
     <div className="App">
-      {/* <CryptoFutures /> */}
-      <CandelStick />
+      <CryptoFutures />
+      {/* <CandelStick /> */}
     </div>
   );
 }
