@@ -41,6 +41,14 @@ Crypto Futures is a real-time cryptocurrency trading platform that fetches live 
 3. Choose an **amount** and **multiplier**, then place a bet.
 
 ## 📞 Support
-For any issues, feel free to **open an issue** or contact us at [support@example.com](mailto:support@example.com).
+For any issues, feel free to **open an issue** or contact us at [snehjaiswal20@gmail.com](mailto:snehjaiswal20@gmail.com).
+
+SNEH JAISWAK
+Web Developer | MERN Stack
+📧 snehjaiswal20@gmail.com
+💻 GitHub: https://github.com/snehpnp
+🔗 LinkedIn: https://www.linkedin.com/in/sneh-jaiswal-431165229
+🌐 Portfolio: https://snehtech.vercel.app/
 
 🚀 **Happy Trading!** 🎉
+
