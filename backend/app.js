@@ -52,6 +52,8 @@ function connectWebSocket() {
       const response = JSON.parse(event.data);
 
       if (response.messageType === "A" && response.data?.length > 0) {
+if(response.data[0] == "Q") {
+
         const newData = response.data // Only take the latest data
         previousData.push(newData); // Store new data in previousData
       
@@ -68,6 +70,8 @@ function connectWebSocket() {
             client.send(JSON.stringify(previousData));
           }
         });
+
+      }
       }
     } catch (error) {
       console.error("❌ Error parsing WebSocket data:", error);
