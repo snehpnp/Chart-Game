@@ -32,47 +32,50 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
+
 body {
 
   background-color: #1a1d26;
-  
+
   color: #fff;
-  
-  }
-  
-  
-  .chart-container {
-  
+
+}
+
+
+.chart-container {
+
   height: 300px;
-  
-  }
-  
-  
-  .crypto-item:hover {
-  
+
+}
+
+
+.crypto-item:hover {
+
   background: rgba(255, 255, 255, 0.05);
-  
-  }
-  
-  
-  .trading-slider::-webkit-slider-thumb {
-  
+
+}
+
+
+.trading-slider::-webkit-slider-thumb {
+
   -webkit-appearance: none;
-  
+
   appearance: none;
-  
+
   width: 20px;
-  
+
   height: 20px;
-  
+
   border-radius: 50%;
-  
+
   background: #fff;
-  
+
   cursor: pointer;
-  
-  }
+
+}
+

@@ -14,13 +14,16 @@ let clients = new Set();
 // Store previous data (limit to last 50 entries)
 let previousData = [];
 
+// Track the last time data was sent
+let lastSentTime = 0;
+
 wss.on("connection", (ws) => {
   console.log("📡 Frontend WebSocket Connected");
   clients.add(ws);
 
-  // Send previous data when frontend connects
+  // Send the latest data when frontend connects
   if (previousData.length > 0) {
-    ws.send(JSON.stringify(previousData));
+    ws.send(JSON.stringify(previousData.at(-1))); // Send only the latest data
   }
 
   ws.on("close", () => {
@@ -38,45 +41,68 @@ function connectWebSocket() {
     const subscribeMessage = {
       eventName: "subscribe",
       authorization: API_KEY,
-      // eventData: { tickers: ["btcusd"] },
-      eventData : {
-        'thresholdLevel': 2,
-        tickers: ["btcusd"]
-    }
+      eventData: {
+        thresholdLevel: 2,
+        tickers: ["btcusd"],
+      },
     };
     ws.send(JSON.stringify(subscribeMessage));
   };
 
-  ws.onmessage = (event) => {
-    try {
-      const response = JSON.parse(event.data);
+let candleBuffer = []; // buffer to store ticks for the current minute
+let currentCandleMinute = null;
 
-      if (response.messageType === "A" && response.data?.length > 0) {
-if(response.data[0] == "Q") {
+ws.onmessage = (event) => {
+  try {
+    const response = JSON.parse(event.data);
 
-        const newData = response.data // Only take the latest data
-        previousData.push(newData); // Store new data in previousData
-      
+    if (response.messageType === "A" && response.data?.length > 0) {
+      if (response.data[0] === "Q") {
+        const tick = response.data;
 
-        // Limit previous data array to last 50 entries
-        if (previousData.length > 50) {
-          previousData.shift(); // Remove oldest data
+        const tickTime = new Date(tick[2]);
+        const tickMinute = tickTime.getUTCFullYear() + "-" + tickTime.getUTCMonth() + "-" + tickTime.getUTCDate() + "-" + tickTime.getUTCHours() + "-" + tickTime.getUTCMinutes();
+
+        if (currentCandleMinute === null) {
+          currentCandleMinute = tickMinute;
         }
-        
 
-        // Send updated previous + new data to all connected frontend clients
-        clients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(previousData));
+        if (tickMinute === currentCandleMinute) {
+          // Collect tick data in buffer
+          candleBuffer.push({
+            time: tickTime,
+            price: tick[5], // Trade price
+          });
+        } else {
+          // Minute changed => finalize previous candle
+          if (candleBuffer.length > 0) {
+            const ohlc = generateCandle(candleBuffer);
+            previousData.push(ohlc);
+
+            if (previousData.length > 50) previousData.shift();
+
+            // Broadcast to all clients
+            clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(ohlc));
+              }
+            });
           }
-        });
 
+          // Reset for new minute
+          candleBuffer = [{
+            time: tickTime,
+            price: tick[5],
+          }];
+          currentCandleMinute = tickMinute;
+        }
       }
-      }
-    } catch (error) {
-      console.error("❌ Error parsing WebSocket data:", error);
     }
-  };
+  } catch (err) {
+    console.error("❌ WebSocket Parse Error:", err);
+  }
+};
+
 
   ws.onerror = (err) => console.error("❌ Tiingo WebSocket Error:", err);
   ws.onclose = () => {
@@ -92,3 +118,20 @@ connectWebSocket();
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+function generateCandle(buffer) {
+  const open = buffer[0].price;
+  const close = buffer.at(-1).price;
+  const high = Math.max(...buffer.map((d) => d.price));
+  const low = Math.min(...buffer.map((d) => d.price));
+  const timestamp = buffer[0].time.toISOString();
+
+  return {
+    x: timestamp,
+    y: [
+      parseFloat(open.toFixed(2)),
+      parseFloat(high.toFixed(2)),
+      parseFloat(low.toFixed(2)),
+      parseFloat(close.toFixed(2)),
+    ],
+  };
+}

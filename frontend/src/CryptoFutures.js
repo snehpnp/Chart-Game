@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import ReactApexChart from "react-apexcharts";
-
+import Chart from "./Chart";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -35,63 +35,6 @@ const CryptoFutures = () => {
   const [betResponse, setBetResponse] = useState([]);
   const [betAmount, setBetAmount] = useState(10);
 
-const [state, setState] = useState({
-          
-            series: [{
-              data: [{
-                  x: new Date(1538778600000),
-                  y: [6629.81, 6650.5, 6623.04, 6633.33]
-                },
-              
-              
-            
-                {
-                  x: new Date(1538796600000),
-                  y: [6608.02, 6610.68, 6601.99, 6608.91]
-                },
-                {
-                  x: new Date(1538798400000),
-                  y: [6608.91, 6618.99, 6608.01, 6612]
-                },
-                
-              ]
-            }],
-           options: {
-  chart: {
-    type: 'candlestick',
-    height: 350,
-  },
-  title: {
-    text: 'CandleStick Chart',
-    align: 'left',
-  },
-  xaxis: {
-    type: 'datetime',
-  },
-  yaxis: {
-    tooltip: {
-      enabled: true,
-    },
-  },
-  tooltip: {
-    style: {
-      fontSize: '14px',
-      colors: ['#000'], // Makes tooltip font black
-    },
-  },
-  plotOptions: {
-    candlestick: {
-      colors: {
-        upward: '#00ff00',  // green
-        downward: '#ff0000', // red
-      },
-    },
-  },
-}
-
-          
-        });
-
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:6767");
 
@@ -102,38 +45,6 @@ const [state, setState] = useState({
     socket.onmessage = (event) => {
       try {
         const newData = JSON.parse(event.data);
-
-        // Filter only "Q" entries and convert to ApexCharts format
-        const apexchartsData = newData
-          .filter((entry) => entry[0] === "Q")
-          .map((entry) => {
-            const utcDate = new Date(entry[2]);
-
-            // Convert to IST using native API
-            const istDate = new Date(utcDate.getTime() + 5.5 * 60 * 60 * 1000);
-
-            // Gnrte randome number to 1 to 5
-            const randomNumber = Math.floor(Math.random() * 5) + 1;
-
-            return {
-              x: istDate,
-              y: [
-                entry[5]?.toFixed(2),
-                entry[6].toFixed(2),
-                (entry[5] - randomNumber).toFixed(2),
-                entry[8].toFixed(2),
-              ], // [Open, High, Low, Close]
-            };
-          });
-
-        setState((prev) => ({
-          ...prev,
-          series: [
-            {
-              data: [...prev.series[0].data, ...apexchartsData].slice(-30),
-            },
-          ],
-        }));
 
         // Optional: Update live crypto price display
         const formattedData = newData.map((entry) => ({
@@ -159,8 +70,6 @@ const [state, setState] = useState({
       socket.close();
     };
   }, []);
-
-  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -200,7 +109,6 @@ const [state, setState] = useState({
   };
 
   const checkBetResult = () => {
-
     if (!userBet || betPrice === null) return;
 
     if (userBet === "UP" && LiveCryptoPrice > betPrice) {
@@ -315,7 +223,7 @@ const [state, setState] = useState({
               <div style={{ width: "1200px", height: "400px" }}>
                 {/* <Line data={chartData} options={options} /> */}
 
-                <div>
+                {/* <div>
                   <div id="chart">
                     <ReactApexChart
                       options={state.options}
@@ -325,7 +233,9 @@ const [state, setState] = useState({
                     />
                   </div>
                   <div id="html-dist"></div>
-                </div>
+                </div> */}
+
+                <Chart />
               </div>
             </div>
           </div>
