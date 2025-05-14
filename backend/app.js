@@ -1,24 +1,26 @@
 const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
+const data = require("./data"); // Assuming you have a data.json file with your initial data
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 const PORT = 6767;
-const API_KEY = "6c89bf7d4e3c6d0e1eff47ad7c8f8b5781ee990b";
 
-// Store connected frontend clients
+// Connected clients
 let clients = new Set();
-// Store previous data (limit to last 50 entries)
+// Store last 100 candles
 let previousData = [];
+// Batch buffer to send every 10 candles
+let batchBuffer = [];
 
 wss.on("connection", (ws) => {
   console.log("📡 Frontend WebSocket Connected");
   clients.add(ws);
 
-  // Send previous data when frontend connects
+  // Send previous 100 candles when frontend connects
   if (previousData.length > 0) {
     ws.send(JSON.stringify(previousData));
   }
@@ -29,60 +31,43 @@ wss.on("connection", (ws) => {
   });
 });
 
-// Function to connect to Tiingo WebSocket
-function connectWebSocket() {
-  const ws = new WebSocket("wss://api.tiingo.com/crypto");
+// 🔁 Generate random candles every second
+let lastClose = 100;
 
-  ws.onopen = () => {
-    console.log("✅ Connected to Tiingo WebSocket");
-    const subscribeMessage = {
-      eventName: "subscribe",
-      authorization: API_KEY,
-      // eventData: { tickers: ["btcusd"] },
-      eventData: {
-        thresholdLevel: 2,
-        tickers: ["btcusd"],
-      },
-    };
-    ws.send(JSON.stringify(subscribeMessage));
+setInterval(() => {
+  const open = lastClose;
+  const close = open + (Math.random() * 4 - 2);
+  const high = Math.max(open, close) + Math.random();
+  const low = Math.min(open, close) - Math.random();
+
+  const newCandle = {
+    time: Math.floor(Date.now() / 1000),
+    open: Number(open.toFixed(2)),
+    high: Number(high.toFixed(2)),
+    low: Number(low.toFixed(2)),
+    close: Number(close.toFixed(2)),
   };
 
-  ws.onmessage = (event) => {
-    try {
-      const response = JSON.parse(event.data);
+  lastClose = newCandle.close;
 
-      if (response.messageType === "A" && response.data?.length > 0) {
-        if (response.data[0] == "Q") {
-          const newData = response.data; // Only take the latest data
-          previousData.push(newData); // Store new data in previousData
+  previousData.push(newCandle);
+  if (previousData.length > 100) {
+    previousData.shift(); // Keep last 100
+  }
 
-          // Limit previous data array to last 50 entries
-          if (previousData.length > 50) {
-            previousData.shift(); // Remove oldest data
-          }
+  batchBuffer.push(newCandle);
 
-          // Send updated previous + new data to all connected frontend clients
-          clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify(previousData));
-            }
-          });
-        }
+  // 📤 Send batch of 10 candles every 10 seconds
+  // if (batchBuffer.length === 10) {
+    clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(batchBuffer));
       }
-    } catch (error) {
-      console.error("❌ Error parsing WebSocket data:", error);
-    }
-  };
+    });
 
-  ws.onerror = (err) => console.error("❌ Tiingo WebSocket Error:", err);
-  ws.onclose = () => {
-    console.warn("⚠️ Tiingo WebSocket Disconnected! Reconnecting...");
-    setTimeout(connectWebSocket, 5000);
-  };
-}
+  // }
 
-// Start Tiingo WebSocket connection
-connectWebSocket();
+}, 1000);
 
 // Start server
 server.listen(PORT, () => {
