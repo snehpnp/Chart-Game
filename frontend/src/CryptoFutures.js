@@ -35,75 +35,62 @@ const CryptoFutures = () => {
   const [betResponse, setBetResponse] = useState([]);
   const [betAmount, setBetAmount] = useState(10);
 
-  const [state, setState] = React.useState({
-    series: [
-      {
-        data: [],
-      },
-    ],
-    options: {
-      chart: {
-        type: "candlestick",
-        height: 350,
-        toolbar: {
-          show: true,
-        },
-        zoom: {
-          enabled: true,
-        },
-      },
-      plotOptions: {
-        candlestick: {
-          colors: {
-            upward: "#00ff00",
-            downward: "#ff0000",
-          },
-        },
-      },
-      animations: {
-        enabled: true,
-        easing: "easeinout",
-        speed: 500,
-        animateGradually: {
-          enabled: true,
-          delay: 150,
-        },
-        dynamicAnimation: {
-          enabled: true,
-          speed: 350,
-        },
-      },
-
-      title: {
-        text: "CandleStick Chart",
-        align: "left",
-      },
-      xaxis: {
-        type: "datetime",
-      },
-      yaxis: {
-        tooltip: {
-          enabled: true,
-        },
-      },
-      annotations: {
-        yaxis: [
-          {
-            y: LiveCryptoPrice,
-            borderColor: "#00E396",
-            label: {
-              borderColor: "#00E396",
-              style: {
-                color: "black",
-                background: "#00E396",
-              },
-              text: `Live: $${LiveCryptoPrice}`,
-            },
-          },
-        ],
+const [state, setState] = useState({
+          
+            series: [{
+              data: [{
+                  x: new Date(1538778600000),
+                  y: [6629.81, 6650.5, 6623.04, 6633.33]
+                },
+              
+              
+            
+                {
+                  x: new Date(1538796600000),
+                  y: [6608.02, 6610.68, 6601.99, 6608.91]
+                },
+                {
+                  x: new Date(1538798400000),
+                  y: [6608.91, 6618.99, 6608.01, 6612]
+                },
+                
+              ]
+            }],
+           options: {
+  chart: {
+    type: 'candlestick',
+    height: 350,
+  },
+  title: {
+    text: 'CandleStick Chart',
+    align: 'left',
+  },
+  xaxis: {
+    type: 'datetime',
+  },
+  yaxis: {
+    tooltip: {
+      enabled: true,
+    },
+  },
+  tooltip: {
+    style: {
+      fontSize: '14px',
+      colors: ['#000'], // Makes tooltip font black
+    },
+  },
+  plotOptions: {
+    candlestick: {
+      colors: {
+        upward: '#00ff00',  // green
+        downward: '#ff0000', // red
       },
     },
-  });
+  },
+}
+
+          
+        });
 
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:6767");
@@ -125,17 +112,20 @@ const CryptoFutures = () => {
             // Convert to IST using native API
             const istDate = new Date(utcDate.getTime() + 5.5 * 60 * 60 * 1000);
 
-            // Gnrte randome number to 1 to 5 
+            // Gnrte randome number to 1 to 5
             const randomNumber = Math.floor(Math.random() * 5) + 1;
 
             return {
               x: istDate,
-              y: [entry[5]?.toFixed(2), entry[6].toFixed(2), (entry[5] - randomNumber).toFixed(2), entry[8].toFixed(2)], // [Open, High, Low, Close]
+              y: [
+                entry[5]?.toFixed(2),
+                entry[6].toFixed(2),
+                (entry[5] - randomNumber).toFixed(2),
+                entry[8].toFixed(2),
+              ], // [Open, High, Low, Close]
             };
           });
 
-
-          
         setState((prev) => ({
           ...prev,
           series: [
@@ -144,8 +134,6 @@ const CryptoFutures = () => {
             },
           ],
         }));
-
-        console.log("apexchartsData", apexchartsData);
 
         // Optional: Update live crypto price display
         const formattedData = newData.map((entry) => ({
@@ -158,7 +146,7 @@ const CryptoFutures = () => {
 
         setLiveCryptoPrice(formattedData.at(-1)?.price);
 
-        setData((prevData) => [...prevData, ...formattedData].slice(-30));
+        // setData((prevData) => [...prevData, ...formattedData].slice(-30));
       } catch (error) {
         console.error("❌ Error parsing WebSocket data:", error);
       }
@@ -172,34 +160,7 @@ const CryptoFutures = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!LiveCryptoPrice) return;
-
-    setState((prev) => {
-      const newOptions = { ...prev.options };
-      delete newOptions.annotations; // optional: reset first
-
-      return {
-        ...prev,
-        options: {
-          ...newOptions,
-          annotations: {
-            yaxis: [
-              {
-                y: LiveCryptoPrice,
-                borderColor: "#00E396",
-                label: {
-                  borderColor: "#00E396",
-                  style: { color: "black", background: "#00E396" },
-                  text: `Live: $${LiveCryptoPrice}`,
-                },
-              },
-            ],
-          },
-        },
-      };
-    });
-  }, [LiveCryptoPrice]);
+  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -231,7 +192,6 @@ const CryptoFutures = () => {
     return () => clearInterval(interval);
   }, [seconds]);
 
-
   const placeBet = (betType) => {
     // if (!betActive) return;
     console.log("Placing bet:", betType);
@@ -240,14 +200,7 @@ const CryptoFutures = () => {
   };
 
   const checkBetResult = () => {
-    console.log(
-      "Checking result -> Bet:",
-      userBet,
-      "Price:",
-      betPrice,
-      "Live:",
-      LiveCryptoPrice
-    );
+
     if (!userBet || betPrice === null) return;
 
     if (userBet === "UP" && LiveCryptoPrice > betPrice) {
