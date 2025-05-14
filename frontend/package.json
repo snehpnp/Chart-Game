@@ -14,7 +14,7 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-chart-financial": "^0.2.1",
     "date-fns": "^2.29.3",
-    "lightweight-charts": "^5.0.4",
+    "lightweight-charts": "^4.2.3",
     "react": "^19.0.0",
     "react-apexcharts": "^1.7.0",
     "react-chartjs-2": "^5.3.0",

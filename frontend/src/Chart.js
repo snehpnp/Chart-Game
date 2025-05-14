@@ -79,9 +79,7 @@ const CryptoFutures = () => {
         const entry = JSON.parse(event.data);
         console.log("📡 WebSocket Message:", entry);
 
-       
-  
-
+    
         // Update chart state with new data
         setState((prev) => ({
           ...prev,
@@ -93,7 +91,7 @@ const CryptoFutures = () => {
         }));
 
         // Update live crypto price display
-        setLiveCryptoPrice(entry.y[3]); // Close price
+        setLiveCryptoPrice(entry.y[0]); // Close price
       } catch (error) {
         console.error("❌ Error parsing WebSocket data:", error);
       }

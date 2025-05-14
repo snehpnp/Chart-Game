@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import Chart from "./Chart";
+import Chart1 from "./Chart1";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -45,19 +46,11 @@ const CryptoFutures = () => {
     socket.onmessage = (event) => {
       try {
         const newData = JSON.parse(event.data);
+        console.log("📡 WebSocket Data:", newData.y[0]);
 
-        // Optional: Update live crypto price display
-        const formattedData = newData.map((entry) => ({
-          time: new Date(entry[2]).toLocaleTimeString("en-IN", {
-            timeZone: "Asia/Kolkata",
-            hour12: false,
-          }),
-          price: entry[5],
-        }));
+    
+        setLiveCryptoPrice(newData.y[0]);
 
-        setLiveCryptoPrice(formattedData.at(-1)?.price);
-
-        // setData((prevData) => [...prevData, ...formattedData].slice(-30));
       } catch (error) {
         console.error("❌ Error parsing WebSocket data:", error);
       }
@@ -234,8 +227,8 @@ const CryptoFutures = () => {
                   </div>
                   <div id="html-dist"></div>
                 </div> */}
-
-                <Chart />
+<Chart1 />
+                {/* <Chart /> */}
               </div>
             </div>
           </div>
